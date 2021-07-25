@@ -1,11 +1,11 @@
 import scrapy
 import re
 import urllib
-phone = '*****'
+phone = "186743762345"
 def authentication_failed(response):
-    login_name_xpath = '//*[@id="navbarDropdown"]/text()'
+    login_name_xpath = '//*[@id="wrapper_body"]/div/div/form/div/span/strong/text()'
     texts = response.xpath(login_name_xpath).getall()
-    return "".join(texts).find(phone) == -1
+    return "".join(texts).find("错误") != -1
 
 class QuotesSpider(scrapy.Spider):
     name = "quotes"
@@ -29,7 +29,7 @@ class QuotesSpider(scrapy.Spider):
         self.name = '机器人'
         if authentication_failed(response):
             self.logger.error("Login failed")
-            return
+            raise Exception("user name and password are not correct!")
         return scrapy.Request(
             'http://fund.sciencenet.cn/search?name={name}&yearStart={yearStart}&yearEnd={yearEnd}&subject={subject}&category={category}&fundStart={fundStart}&fundEnd={fundEnd}&submit=list'.format(
                 name = self.name,
