@@ -1,7 +1,7 @@
 import scrapy
 import re
 import urllib
-phone = "186743762345"
+import json
 def authentication_failed(response):
     login_name_xpath = '//*[@id="wrapper_body"]/div/div/form/div/span/strong/text()'
     texts = response.xpath(login_name_xpath).getall()
@@ -19,9 +19,13 @@ class QuotesSpider(scrapy.Spider):
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
+        config = {}
+        with open('./config.json') as f:
+            config = json.load(f)
+
         return scrapy.FormRequest.from_response(
             response,
-            formdata={'phone': phone, 'password': '***'},
+            formdata={'phone': config["phone"], 'password': config["password"]},
             callback=self.after_login
         )
 
