@@ -61,8 +61,7 @@ class QuotesSpider(scrapy.Spider):
             return re.search(urllib.parse.quote(self.config["name"]), link) != None
         pages_xpath = '//*[@id="page_button"]/span/a/@href'
         links = response.xpath(pages_xpath).getall()
-        links = list(filter(is_page_link, links))
-        return links
+        return filter(is_page_link, links)
 
     def after_search(self, response):
         for item in self.collect_items(response):
@@ -97,12 +96,12 @@ class QuotesSpider(scrapy.Spider):
         keywords = item.xpath('div[@class="d"]/p[2]/span[2]/i/text()').getall()
 
         return {
-            "name": "".join(list(map(lambda s: s.strip(), texts))),
+            "name": "".join(map(lambda s: s.strip(), texts)),
             "author": author,
             "number": number,
             "department": department,
             "research_type": research_type,
             "year": year,
             "money": money,
-            "keywords": "".join(list(map(lambda s: s.strip(), keywords))),
+            "keywords": "".join(map(lambda s: s.strip(), keywords)),
         }
