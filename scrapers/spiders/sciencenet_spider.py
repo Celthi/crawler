@@ -52,7 +52,7 @@ class QuotesSpider(scrapy.Spider):
         )
     def iter_pages(self, response):
         def is_page_link(link):
-            return re.search(urllib.parse.quote(self.name), link) != None
+            return re.search(urllib.parse.quote(self.config["name"]), link) != None
         pages_xpath = '//*[@id="page_button"]/span/a/@href'
         links = response.xpath(pages_xpath).getall()
         links = list(filter(is_page_link, links))
