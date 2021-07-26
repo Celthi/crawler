@@ -10,7 +10,7 @@ def authentication_failed(response):
 class QuotesSpider(scrapy.Spider):
     name = "quotes"
     visited_links = set('1') # the first page will always be crawled.
-
+    config = {}
     def start_requests(self):
         urls = [
             'http://fund.sciencenet.cn/login',
@@ -19,30 +19,34 @@ class QuotesSpider(scrapy.Spider):
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
-        config = {}
-        with open('./config.json') as f:
-            config = json.load(f)
+        try:
+            with open('./config.json') as f:
+                self.config = json.load(f)
+        except:
+            self.logger.error('Please provide a ./config.json file!')
+            raise Exception("No config.json file provided!")
 
         return scrapy.FormRequest.from_response(
             response,
-            formdata={'phone': config["phone"], 'password': config["password"]},
+            formdata={'phone': self.config["phone"], 'password': self.config["password"]},
             callback=self.after_login
         )
 
     def after_login(self, response):
-        self.name = '机器人'
+        #TODO: the authentication check is never reached if the login is failed. The reason is when the login fails, after_login will never call which is due to scrapy duplicates filter.
         if authentication_failed(response):
             self.logger.error("Login failed")
             raise Exception("user name and password are not correct!")
+        self.logger.info('Crawling for name = {}...'.format(self.config["name"]))
         return scrapy.Request(
             'http://fund.sciencenet.cn/search?name={name}&yearStart={yearStart}&yearEnd={yearEnd}&subject={subject}&category={category}&fundStart={fundStart}&fundEnd={fundEnd}&submit=list'.format(
-                name = self.name,
-                yearStart = '2019',
-                yearEnd = '2021',
-                subject = '',
-                category = '',
-                fundStart = '',
-                fundEnd = '',
+                name = self.config["name"],
+                yearStart = self.config['yearStart'],
+                yearEnd = self.config['yearEnd'],
+                subject = self.config['subject'],
+                category = self.config['category'],
+                fundStart = self.config['fundStart'],
+                fundEnd = self.config['fundEnd']
             ),
             callback=self.after_search      
         )
