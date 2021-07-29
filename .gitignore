@@ -3,3 +3,4 @@
 *.xlsx
 config.json
 .DS_Store
+test.py

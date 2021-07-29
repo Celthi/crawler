@@ -29,7 +29,8 @@ class ScrapersPipeline:
             cells[v["cell"]] =  v["name"]
         self.ws.append(cells)
     def close_spider(self, spider):
-        self.wb.save('data {}.xlsx'.format(datetime.datetime.now()))
+        time = datetime.datetime.now()
+        self.wb.save('data {}-{}-{}-{}.xlsx'.format(time.month, time.day, time.hour, time.minute))
         self.wb.close()
 
     def process_item(self, item, spider):

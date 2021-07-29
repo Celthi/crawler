@@ -23,7 +23,7 @@ class QuotesSpider(scrapy.Spider):
 
     def parse(self, response):
         try:
-            with open('./config.json') as f:
+            with open('./config.json', 'r', encoding='utf-8') as f:
                 self.config = json.load(f)
         except:
             self.logger.error('Please provide a ./config.json file!')
@@ -31,34 +31,39 @@ class QuotesSpider(scrapy.Spider):
 
         return scrapy.FormRequest.from_response(
             response,
-            formdata={'phone': self.config["phone"],
-                      'password': self.config["password"]},
+            formdata={'phone': self.config["手机号码"],
+                      'password': self.config["密码"]},
             callback=self.after_login
         )
 
+    def construct_search_url(self):
+        fuzzy_search = ""
+        if self.config["模糊查询"] == "开启":
+            fuzzy_search = "&match=1"
+        url = 'http://fund.sciencenet.cn/search?name={name}&yearStart={yearStart}&yearEnd={yearEnd}&subject={subject}&category={category}&fundStart={fundStart}&fundEnd={fundEnd}&submit=list'.format(
+                name=self.config["查询项目名称"],
+                yearStart=self.config['批准年度开始'],
+                yearEnd=self.config['批准年度结束'],
+                subject=self.config['学科分类'],
+                category=self.config['项目类别'],
+                fundStart=self.config['fundStart'],
+                fundEnd=self.config['fundEnd']) + fuzzy_search
+        return url
     def after_login(self, response):
         # TODO: the authentication check is never reached if the login is failed. The reason is when the login fails, after_login will never call which is due to scrapy duplicates filter.
         if authentication_failed(response):
             self.logger.error("Login failed")
             raise Exception("user name and password are not correct!")
         self.logger.info(
-            'Crawling for name = {}...'.format(self.config["name"]))
+            'Crawling for name = {}...'.format(self.config["查询项目名称"]))
         return scrapy.Request(
-            'http://fund.sciencenet.cn/search?name={name}&yearStart={yearStart}&yearEnd={yearEnd}&subject={subject}&category={category}&fundStart={fundStart}&fundEnd={fundEnd}&submit=list'.format(
-                name=self.config["name"],
-                yearStart=self.config['yearStart'],
-                yearEnd=self.config['yearEnd'],
-                subject=self.config['subject'],
-                category=self.config['category'],
-                fundStart=self.config['fundStart'],
-                fundEnd=self.config['fundEnd']
-            ),
+            self.construct_search_url(),
             callback=self.after_search
         )
 
     def iter_pages(self, response):
         def is_page_link(link):
-            return re.search(urllib.parse.quote(self.config["name"]), link) != None
+            return re.search(urllib.parse.quote(self.config["查询项目名称"]), link) != None
         pages_xpath = '//*[@id="page_button"]/span/a/@href'
         links = response.xpath(pages_xpath).getall()
         return filter(is_page_link, links)
