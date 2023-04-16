@@ -1,2 +1,7 @@
 scrapy == 2.5.0
 openpyxl == 3.0.7
+cryptography==38.0.4
+pyopenssl==22.0.0  
+pandas ~= 2.0
+xlrd ~=2.0
+python-magic ~=0.4
