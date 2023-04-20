@@ -13,6 +13,8 @@ class QuotesSpider(scrapy.Spider):
     def start_requests(self):
         urls = [
             'http://www.shiyebian.net/zhejiang/hangzhou/',
+            'http://www.shiyebian.net/e/action/ListInfo/?classid=94&page=1',
+            'http://www.shiyebian.net/e/action/ListInfo/?classid=94&page=2'
         ]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
@@ -29,13 +31,11 @@ class QuotesSpider(scrapy.Spider):
         for link in self.iter_pages(response):
             if not self.has_visited(link):
                 self.count += 1
-                if self.count > 20:
-                    break
                 self.visited_links.add(link)
                 yield response.follow(link, callback=self.parse)
 
     def iter_pages(self, response):
-        pages_xpath = "//div[contains(@class, 'listlie')]/ul/li/a/@href"
+        pages_xpath = "//div[contains(@class, 'listlie')]/ul/li/a[@href and contains(text(), '2023')]/@href"
         links = response.xpath(pages_xpath).getall()
         return links
 
@@ -44,7 +44,7 @@ class QuotesSpider(scrapy.Spider):
         return link in self.visited_links
 
     def collect_items(self, response):
-        item_xpath = '//a[contains(text(), "附件") and substring(@href, string-length(@href) - 3) = ".xls"]'
+        item_xpath = '//a[contains(text(), "附件") and ((substring(@href, string-length(@href) - 3) = ".xls") or (substring(@href, string-length(@href) - 4) = ".xlsx"))]'
         for i in response.xpath(item_xpath):
             yield self.get_item(i)
 
